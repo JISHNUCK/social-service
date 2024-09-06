@@ -103,6 +103,8 @@ public class MainRestController {
         Optional<String> healthStatusCookie = Optional.ofNullable(request.getHeader("health_status_cookie"));
         if(healthStatusCookie.isEmpty())
         {
+            // ASYNC REQUEST TO HEALTH-SERVICE
+
             Mono<String> responseMono = webClient.get()
                     .retrieve()
                     .bodyToMono(String.class); // ASYNCHRONOUS
@@ -121,7 +123,7 @@ public class MainRestController {
                         log.info("error processing the response "+error1);
                     });
 
-            // SENDING ANOTHER PARALLEL REQUEST
+            // SENDING ANOTHER PARALLEL REQUEST TO OBSERVABLE-SERVICE
 
             Mono<String> responseMono_2 = webClient_obs.get()
                     .retrieve()
@@ -136,8 +138,6 @@ public class MainRestController {
                     {
                         log.info("error processing the response "+error2);
                     });
-
-
 
             return  ResponseEntity.ok().header("health_status_cookie", cookie).body("Status Request Initiated");
         }
