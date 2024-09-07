@@ -1,11 +1,11 @@
 package com.egov.socialservice;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -16,7 +16,7 @@ import java.sql.Date;
 import java.util.Optional;
 import java.util.UUID;
 
-
+@Tag(name = "Social Service", description = "Social Service APIs")
 @RestController
 @RequestMapping("/api/v1")
 public class MainRestController {

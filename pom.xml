@@ -74,6 +74,12 @@
             <artifactId>jedis</artifactId>
             <version>4.3.1</version>
         </dependency>
+        <!-- Swagger for rest documentation -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.1.0</version>
+        </dependency>
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
