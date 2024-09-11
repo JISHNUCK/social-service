@@ -1,5 +1,6 @@
 package com.egov.socialservice;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -35,6 +36,9 @@ public class MainRestController {
     @Autowired
     CredentialRepository credentialRepository;
 
+    @Autowired
+    Producer producer;
+
     private static final Logger log = LoggerFactory.getLogger(MainRestController.class);
 
 
@@ -46,15 +50,15 @@ public class MainRestController {
     }
 
     @GetMapping("/register")
-    public ResponseEntity<Credential> register()
-    {
+    public ResponseEntity<Credential> register() throws JsonProcessingException {
            Credential credential = new Credential();
            credential.setId(UUID.randomUUID());
            credential.setPassword(String.valueOf((int)(Math.random()*1000000)));
            credentialRepository.save(credential);
            //redisTemplate.opsForValue().set(credential.getCitizenid().toString(), credential.getPassword());
 
-           return  ResponseEntity.ok(credential);
+            producer.pubSocialEvent_1("LOGIN",credential.getId());
+            return  ResponseEntity.ok(credential);
     }
 
     @GetMapping("/login")
@@ -98,7 +102,7 @@ public class MainRestController {
     }
 
     @GetMapping("/health")
-    public ResponseEntity<String> getHealthStatus(HttpServletRequest request)
+    public ResponseEntity<String> getHealthStatus(HttpServletRequest request) // URI HANDLER
     {
         Optional<String> healthStatusCookie = Optional.ofNullable(request.getHeader("health_status_cookie"));
         if(healthStatusCookie.isEmpty())
@@ -112,14 +116,15 @@ public class MainRestController {
             //final String[] finalResponse = {null};
             String cookie =  String.valueOf((int)(Math.random()*1000000));
 
-            responseMono.subscribe(
-                    response1 -> {
+            responseMono.subscribe( // ASYNC RESPONSE HANDLER
+                    response1 -> { // SUCCESS HANDLER
                         log.info(response1+" from the health service");
                         //finalResponse[0] = response;
                         redisTemplate.opsForValue().set(cookie, response1);
                     },
                     error1 ->
                     {
+                        // ROLLBACK + FAILURE MESSAGE UPDATION IN CACHE
                         log.info("error processing the response "+error1);
                     });
 
