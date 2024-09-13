@@ -2,7 +2,9 @@ package com.egov.socialservice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.sql.Date;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,7 +41,13 @@ public class MainRestController {
     CredentialRepository credentialRepository;
 
     @Autowired
+    SocialRepository socialRepository;
+
+    @Autowired
     Producer producer;
+
+    @Autowired
+    RequestIdExtractor requestIdExtractor;
 
     private static final Logger log = LoggerFactory.getLogger(MainRestController.class);
 
@@ -102,25 +112,39 @@ public class MainRestController {
     }
 
     @GetMapping("/health")
-    public ResponseEntity<String> getHealthStatus(HttpServletRequest request) // URI HANDLER
+    public ResponseEntity<String> getHealthStatus(HttpServletRequest request, HttpServletResponse servletResponse) // URI HANDLER
     {
-        Optional<String> healthStatusCookie = Optional.ofNullable(request.getHeader("health_status_cookie"));
-        if(healthStatusCookie.isEmpty())
-        {
-            // ASYNC REQUEST TO HEALTH-SERVICE
+        //Optional<String> healthStatusCookie = Optional.ofNullable(request.getHeader("health_status_cookie"));
 
+        Cookie[] cookies = request.getCookies();
+        // REFACTOR TO TAKE NULL VALUES INTO ACCOUNT
+        List<Cookie> cookieList = List.of(cookies);
+
+        if( cookieList.stream().filter(cookie -> cookie.getName().equals("ss-1")).findAny().isEmpty()) // COOKIE_CHECK
+        {
+            //STEP 1: DB CHANGES FOR SOCIAL-SERVICE
+            Social social = new Social();
+            social.setId(String.valueOf((int)(Math.random()*1000000)));
+            social.setType("TESTING");
+            socialRepository.save(social);
+
+            //STEP 2: ASYNC REQUEST TO HEALTH-SERVICE
             Mono<String> responseMono = webClient.get()
                     .retrieve()
                     .bodyToMono(String.class); // ASYNCHRONOUS
 
-            //final String[] finalResponse = {null};
-            String cookie =  String.valueOf((int)(Math.random()*1000000));
+            //STEP 3: COOKIE-GENERATION + INTERIM RESPONSE
+            //String cookie =  String.valueOf((int)(Math.random()*1000000));
+
+            String requestid = requestIdExtractor.getRequestId(request);
+            Cookie cookie1 = new Cookie("ss-1", "ss-1-"+requestid);
+            cookie1.setMaxAge(3600);
 
             responseMono.subscribe( // ASYNC RESPONSE HANDLER
                     response1 -> { // SUCCESS HANDLER
                         log.info(response1+" from the health service");
                         //finalResponse[0] = response;
-                        redisTemplate.opsForValue().set(cookie, response1);
+                        redisTemplate.opsForValue().set(String.valueOf(cookie1), response1);
                     },
                     error1 ->
                     {
@@ -144,10 +168,14 @@ public class MainRestController {
                         log.info("error processing the response "+error2);
                     });
 
-            return  ResponseEntity.ok().header("health_status_cookie", cookie).body("Status Request Initiated");
+            servletResponse.addCookie(cookie1);
+            return  ResponseEntity.ok().body("Social-Service-STEP-1-COMPLETE");
         }
         else
         {
+            // TO BE MODIFIED TO CHECK FOR COOKIE AND NOT HEADER
+
+            /*
              String cookie = request.getHeader("health_status_cookie");
              String response = (String)redisTemplate.opsForValue().get(cookie);
 
@@ -159,8 +187,13 @@ public class MainRestController {
              {
                  return ResponseEntity.ok().body(response);
              }
+             */
+            return ResponseEntity.ok().body("Social-Service-STEP-2-IN-PROGRESS");
+
         }
     }
+
+
 
 
 
