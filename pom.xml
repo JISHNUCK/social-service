@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.egov</groupId>
     <artifactId>social-service</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>dev-1</version>
     <name>social-service</name>
     <description>social-service</description>
     <url/>
