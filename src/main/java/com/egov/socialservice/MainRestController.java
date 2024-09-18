@@ -1,6 +1,8 @@
 package com.egov.socialservice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.annotation.CircuitBreaker;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -85,6 +88,7 @@ public class MainRestController {
         }
     }
 
+
     @GetMapping("/getdob/{citizenid}")
     public ResponseEntity<String> getdob(@PathVariable UUID citizenid)
     {
@@ -111,14 +115,27 @@ public class MainRestController {
         return  ResponseEntity.ok("DOB extraction initiated"); // INCORRECT APPROACH
     }
 
+    @CircuitBreaker()
+    @RateLimiter(name = "healthService")
+    @Retry(name = "healthService")
     @GetMapping("/health")
     public ResponseEntity<String> getHealthStatus(HttpServletRequest request, HttpServletResponse servletResponse) // URI HANDLER
     {
-        //Optional<String> healthStatusCookie = Optional.ofNullable(request.getHeader("health_status_cookie"));
 
+        List<Cookie> cookieList = null;
+
+        //Optional<String> healthStatusCookie = Optional.ofNullable(request.getHeader("health_status_cookie"));
         Cookie[] cookies = request.getCookies();
-        // REFACTOR TO TAKE NULL VALUES INTO ACCOUNT
-        List<Cookie> cookieList = List.of(cookies);
+        if(cookies == null)
+        {
+            cookieList = new ArrayList<>();
+        }
+        else
+        {
+            // REFACTOR TO TAKE NULL VALUES INTO ACCOUNT
+            cookieList = List.of(cookies);
+        }
+
 
         if( cookieList.stream().filter(cookie -> cookie.getName().equals("ss-1")).findAny().isEmpty()) // COOKIE_CHECK
         {
