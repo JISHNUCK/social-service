@@ -20,6 +20,15 @@ public class AppConfig {
     //@Value("${gateway-server.portnumber}")
     //String gateway_portnumber;
 
+    @Bean
+    public SocialEvent1 getSocialEvent1()
+    {
+        SocialEvent1 socialEvent1 =new SocialEvent1();
+        socialEvent1.setType("social");
+        socialEvent1.setUsername(null);
+        return new SocialEvent1();
+    }
+
     @Autowired
     private EurekaDiscoveryClient discoveryClient;
 

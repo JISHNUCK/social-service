@@ -16,12 +16,16 @@ public class Producer
     private static final Logger logger = LoggerFactory.getLogger(Producer.class);
     private static final String TOPIC = "social-events";
 
+    @Autowired //DEPENDENCY INJECTION PROMISE FULFILLED AT RUNTIME
+    private KafkaTemplate<String, String> kafkaTemplate ;
+
     @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
+    SocialEvent1 socialEvent1;
+
 
     public void pubSocialEvent_1(String type, UUID userid) throws JsonProcessingException // LOGIN | REGISTER
     {
-        SocialEvent1 socialEvent1 = new SocialEvent1();
+        //SocialEvent1 socialEvent1 = new SocialEvent1();
         socialEvent1.setType(type);
         socialEvent1.setUsername(userid);
 

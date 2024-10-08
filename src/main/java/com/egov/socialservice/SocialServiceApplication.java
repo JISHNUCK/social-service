@@ -6,9 +6,11 @@ import org.springframework.boot.web.servlet.ServletComponentScan;
 
 @SpringBootApplication
 @ServletComponentScan
-public class SocialServiceApplication {
+public class SocialServiceApplication
+{
 
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
         SpringApplication.run(SocialServiceApplication.class, args);
     }
 
