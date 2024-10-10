@@ -41,6 +41,10 @@ public class MainRestController {
     WebClient webClient_obs;
 
     @Autowired
+    @Qualifier("webClientRationService_1")
+    WebClient webClientRationService_1;
+
+    @Autowired
     CredentialRepository credentialRepository;
 
     @Autowired
@@ -93,6 +97,7 @@ public class MainRestController {
     public ResponseEntity<String> getdob(@PathVariable UUID citizenid)
     {
 
+
         Mono<Date> responseMono = webClient.post()
                 .body(citizenid, UUID.class) // Set the request body as UUID
                 .retrieve()
@@ -113,6 +118,7 @@ public class MainRestController {
                 });
 
         return  ResponseEntity.ok("DOB extraction initiated"); // INCORRECT APPROACH
+
     }
 
     @CircuitBreaker()
@@ -145,6 +151,8 @@ public class MainRestController {
             social.setType("TESTING");
             socialRepository.save(social);
 
+
+
             //STEP 2: ASYNC REQUEST TO HEALTH-SERVICE
             Mono<String> responseMono = webClient.get()
                     .retrieve()
@@ -169,8 +177,9 @@ public class MainRestController {
                         log.info("error processing the response "+error1);
                     });
 
-            // SENDING ANOTHER PARALLEL REQUEST TO OBSERVABLE-SERVICE
 
+
+            // SENDING ANOTHER PARALLEL REQUEST TO OBSERVABLE-SERVICE
             Mono<String> responseMono_2 = webClient_obs.get()
                     .retrieve()
                     .bodyToMono(String.class); // ASYNCHRONOUS
@@ -187,12 +196,14 @@ public class MainRestController {
 
             servletResponse.addCookie(cookie1);
             return  ResponseEntity.ok().body("Social-Service-STEP-1-COMPLETE");
+
+
         }
         else
         {
             // TO BE MODIFIED TO CHECK FOR COOKIE AND NOT HEADER
 
-            /*
+
              String cookie = request.getHeader("health_status_cookie");
              String response = (String)redisTemplate.opsForValue().get(cookie);
 
@@ -204,10 +215,46 @@ public class MainRestController {
              {
                  return ResponseEntity.ok().body(response);
              }
-             */
-            return ResponseEntity.ok().body("Social-Service-STEP-2-IN-PROGRESS");
+
+            //return ResponseEntity.ok().body("Social-Service-STEP-2-IN-PROGRESS");
 
         }
+
+    }
+
+    @GetMapping("/get/all/citizen/ration/details")
+    public ResponseEntity<String> getAllCitizenRationDetails(HttpServletRequest request)
+    {
+        // Forward the Request to the Ration-Service
+
+        //STEP 2: ASYNC REQUEST TO HEALTH-SERVICE
+        Mono<String> responseMono = webClientRationService_1.get()
+                .retrieve()
+                .bodyToMono(String.class); // ASYNCHRONOUS - IF .BLOCK() IS NOT USED | SYNCHRONOUS - THREAD WILL BE BLOCKED AT THIS POINT IF .BLOCK()
+
+        //STEP 3: COOKIE-GENERATION + INTERIM RESPONSE
+        //String cookie =  String.valueOf((int)(Math.random()*1000000));
+
+        //String requestid = requestIdExtractor.getRequestId(request);
+        //Cookie cookie1 = new Cookie("ss-1", "ss-1-"+requestid);
+        //cookie1.setMaxAge(3600);
+
+        responseMono.subscribe(
+                // ASYNC RESPONSE HANDLER
+                response1 -> { // SUCCESS HANDLER
+                    log.info(response1+" from the ration service");
+                    //finalResponse[0] = response;
+                   // redisTemplate.opsForValue().set(String.valueOf(cookie1), response1);
+                },
+                error1 ->
+                { // ERROR HANDLER
+                    // ROLLBACK + FAILURE MESSAGE UPDATION IN CACHE
+                    log.info("error processing the response from ration service"+error1);
+                }
+
+                );
+
+        return ResponseEntity.ok("social service has forwarded the response to the ration-service");
     }
 
 

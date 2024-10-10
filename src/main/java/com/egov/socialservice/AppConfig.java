@@ -81,6 +81,26 @@ public class AppConfig {
 
     }
 
+    @Bean
+    public WebClient webClientRationService_1(WebClient.Builder webClientBuilder)
+    {
+        /*
+        return webClientBuilder
+                .baseUrl("http://"+gateway_hostname+":"+gateway_portnumber+"/health-service/api/v1/gethealthstatus")
+                .filter(new LoggingWebClientFilter())
+                .build();
+                */
+        ServiceInstance instance = getServiceInstance("ration-service");
+        String hostname = instance.getHost();
+        int port = instance.getPort();
+
+        return webClientBuilder
+                .baseUrl("http://"+hostname+":"+port+"/api/v1/get/ration/details") //GET_RATION_DETAILS -> FETCH THE URI FROM HATEOS RESPONSE
+                .filter(new LoggingWebClientFilter())
+                .build();
+
+    }
+
     @Retryable(
             value = {RuntimeException.class}, // specify the exception types to retry on
             maxAttempts = 5,
