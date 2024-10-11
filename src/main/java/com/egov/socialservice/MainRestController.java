@@ -29,6 +29,8 @@ import java.util.UUID;
 @RequestMapping("/api/v1")
 public class MainRestController {
 
+    private static final Logger log = LoggerFactory.getLogger(MainRestController.class);
+
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
@@ -56,7 +58,6 @@ public class MainRestController {
     @Autowired
     RequestIdExtractor requestIdExtractor;
 
-    private static final Logger log = LoggerFactory.getLogger(MainRestController.class);
 
 
     @PostMapping("/save")
@@ -227,10 +228,15 @@ public class MainRestController {
     {
         // Forward the Request to the Ration-Service
 
+        log.info("Request received from POSTMAN for the RATION-DETAILS ENDPOINT");
+
         //STEP 2: ASYNC REQUEST TO HEALTH-SERVICE
         Mono<String> responseMono = webClientRationService_1.get()
                 .retrieve()
                 .bodyToMono(String.class); // ASYNCHRONOUS - IF .BLOCK() IS NOT USED | SYNCHRONOUS - THREAD WILL BE BLOCKED AT THIS POINT IF .BLOCK()
+
+        log.info("Request forwarded to the RATION-SERVICE");
+
 
         //STEP 3: COOKIE-GENERATION + INTERIM RESPONSE
         //String cookie =  String.valueOf((int)(Math.random()*1000000));
@@ -253,6 +259,8 @@ public class MainRestController {
                 }
 
                 );
+
+        log.info("Async Request Handlers for handling response appended");
 
         return ResponseEntity.ok("social service has forwarded the response to the ration-service");
     }
