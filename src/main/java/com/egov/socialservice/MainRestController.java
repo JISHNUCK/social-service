@@ -69,13 +69,15 @@ public class MainRestController {
 
     @GetMapping("/register")
     public ResponseEntity<Credential> register() throws JsonProcessingException {
+
            Credential credential = new Credential();
            credential.setId(UUID.randomUUID());
            credential.setPassword(String.valueOf((int)(Math.random()*1000000)));
+
            credentialRepository.save(credential);
            //redisTemplate.opsForValue().set(credential.getCitizenid().toString(), credential.getPassword());
 
-            producer.pubSocialEvent_1("LOGIN",credential.getId());
+            producer.pubSocialEvent_1("REGISTER",credential.getId());
             return  ResponseEntity.ok(credential);
     }
 
@@ -152,8 +154,6 @@ public class MainRestController {
             social.setType("TESTING");
             socialRepository.save(social);
 
-
-
             //STEP 2: ASYNC REQUEST TO HEALTH-SERVICE
             Mono<String> responseMono = webClient.get()
                     .retrieve()
@@ -178,8 +178,6 @@ public class MainRestController {
                         log.info("error processing the response "+error1);
                     });
 
-
-
             // SENDING ANOTHER PARALLEL REQUEST TO OBSERVABLE-SERVICE
             Mono<String> responseMono_2 = webClient_obs.get()
                     .retrieve()
@@ -197,17 +195,12 @@ public class MainRestController {
 
             servletResponse.addCookie(cookie1);
             return  ResponseEntity.ok().body("Social-Service-STEP-1-COMPLETE");
-
-
         }
         else
         {
             // TO BE MODIFIED TO CHECK FOR COOKIE AND NOT HEADER
-
-
              String cookie = request.getHeader("health_status_cookie");
              String response = (String)redisTemplate.opsForValue().get(cookie);
-
              if(response == null)
              {
                  return ResponseEntity.notFound().build();
@@ -216,18 +209,14 @@ public class MainRestController {
              {
                  return ResponseEntity.ok().body(response);
              }
-
             //return ResponseEntity.ok().body("Social-Service-STEP-2-IN-PROGRESS");
-
         }
-
     }
 
     @GetMapping("/get/all/citizen/ration/details")
     public ResponseEntity<String> getAllCitizenRationDetails(HttpServletRequest request)
     {
         // Forward the Request to the Ration-Service
-
         log.info("Request received from POSTMAN for the RATION-DETAILS ENDPOINT");
 
         //STEP 2: ASYNC REQUEST TO HEALTH-SERVICE

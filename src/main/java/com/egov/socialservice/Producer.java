@@ -28,6 +28,7 @@ public class Producer
         //SocialEvent1 socialEvent1 = new SocialEvent1();
         socialEvent1.setType(type);
         socialEvent1.setUsername(userid);
+        socialEvent1.setService_name("social-service");
 
         // convert to JSON
         ObjectMapper objectMapper = new ObjectMapper();
