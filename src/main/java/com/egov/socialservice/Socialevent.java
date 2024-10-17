@@ -46,4 +46,12 @@ public class Socialevent {
         this.socialeventtype = socialeventtype;
     }
 
+    @Override
+    public String toString() {
+        return "Socialevent{" +
+                "id=" + id +
+                ", citizenid=" + citizenid +
+                ", socialeventtype='" + socialeventtype + '\'' +
+                '}';
+    }
 }

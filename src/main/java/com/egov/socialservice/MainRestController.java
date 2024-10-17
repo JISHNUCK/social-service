@@ -58,7 +58,8 @@ public class MainRestController {
     @Autowired
     RequestIdExtractor requestIdExtractor;
 
-
+    @Autowired
+    SocialeventRepository socialeventRepository;
 
     @PostMapping("/save")
     public String saveObj(@RequestParam("key") String key, @RequestParam("value") String value)
@@ -255,6 +256,14 @@ public class MainRestController {
     }
 
 
+    //GET SOCIAL EVENTS ENDPOINT
+    @PostMapping("get/social/events")
+    public ResponseEntity<Socialevent> getSocialEvent(@RequestBody Citizen citizen)
+    {
+         Socialevent socialevent = socialeventRepository.findByCitizenid(citizen.getCitizenid());
+         log.info("fetched the social event: "+socialevent+" for the citzen id: "+citizen.getCitizenid());
+         return ResponseEntity.ok(socialevent);
+    }
 
 
 
