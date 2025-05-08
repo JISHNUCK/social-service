@@ -116,7 +116,10 @@ public class AppConfig {
         if (instances.isEmpty()) {
             throw new RuntimeException("No instances found for "+serviceName);
         }
-        return instances.get(0);
+
+        return instances.get(0); // More Complex load balancing logic if load balancing needs to be done
     }
+
+
 
 }
